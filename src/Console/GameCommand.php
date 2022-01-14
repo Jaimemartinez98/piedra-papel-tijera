@@ -8,9 +8,13 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
+use Uniqoders\Game\Console\CustomRepository;
 
 class GameCommand extends Command
 {
+   
+    private $customRepository;
+
     /**
      * Configure the command options.
      *
@@ -47,58 +51,66 @@ class GameCommand extends Command
                 ]
             ]
         ];
+        $this->customRepository = new CustomRepository(); 
+        
+        $bing_bang = $this->customRepository->BigBang();
+
 
         // Weapons available
-        $weapons = [
-            0 => 'Scissors',
-            1 => 'Rock',
-            2 => 'Paper'
-        ];
+        $weapons = $this->customRepository->Weapons($bing_bang);
 
         // Rules to win
-        $rules = [
-            0 => 2,
-            1 => 0,
-            2 => 1
-        ];
+        $rules = $this->customRepository->Rules($bing_bang);     
 
-        $round = 1;
-        $max_round = 5;
+        $round = 0;
+        $max_round = $this->customRepository->ChangeRounds();
 
         $ask = $this->getHelper('question');
 
+        print_r("Recuerda que ganarás con el 60% de los juegos ganados \n");
+
+        $flag = 0;
         do {
+            
             // User selection
-            $question = new ChoiceQuestion('Please select your weapon', array_values($weapons), 1);
+            $question = new ChoiceQuestion('Porfavor seleccione su arma ', array_values($weapons), 1);
             $question->setErrorMessage('Weapon %s is invalid.');
 
             $user_weapon = $ask->ask($input, $output, $question);
-            $output->writeln('You have just selected: ' . $user_weapon);
+            $output->writeln('Tu haz seleccionado: ' . $user_weapon);
             $user_weapon = array_search($user_weapon, $weapons);
 
             // Computer selection
             $computer_weapon = array_rand($weapons);
-            $output->writeln('Computer has just selected: ' . $weapons[$computer_weapon]);
+            $output->writeln('La computadora ha seleccionado: ' . $weapons[$computer_weapon]);
 
             if ($rules[$user_weapon] === $computer_weapon) {
                 $players['player']['stats']['victory']++;
                 $players['computer']['stats']['defeat']++;
 
                 $output->writeln($player_name . ' win!');
+
+                $flag++;
+
             } else if ($rules[$computer_weapon] === $user_weapon) {
                 $players['player']['stats']['defeat']++;
                 $players['computer']['stats']['victory']++;
 
-                $output->writeln('Computer win!');
+                $output->writeln('Gana la computadora!');
             } else {
                 $players['player']['stats']['draw']++;
                 $players['computer']['stats']['draw']++;
 
                 $output->writeln('Draw!');
             }
-
+            
             $round++;
-        } while ($round <= $max_round);
+            
+            if (($flag/$max_round) >= 0.6) {
+                $round = $max_round;
+            }
+
+        } while ($round < $max_round);
 
         // Display stats
         $stats = $players;
