@@ -4,13 +4,7 @@ namespace Uniqoders\Game\Console;
 
 class CustomRepository
 {
-    // public $wepons;
-
-    // public function __contruct($wepons = []): void
-    // {
-    //     $this->wepons = $wepons;
-    // }
-
+  
     public function ChangeRounds()
     {  
 
